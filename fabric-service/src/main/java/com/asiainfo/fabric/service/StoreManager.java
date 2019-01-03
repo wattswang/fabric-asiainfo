@@ -46,15 +46,18 @@ import org.hyperledger.fabric.sdk.Enrollment;
 import org.hyperledger.fabric.sdk.HFClient;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 
+import com.asiainfo.fabric.service.bean.OrgEntity;
+import com.asiainfo.fabric.service.bean.UserEntity;
+
 /**
  * A local file-based key value store.
  */
-public class SampleStore {
+public class StoreManager {
 
     private String file;
-    private Log logger = LogFactory.getLog(SampleStore.class);
+    private Log logger = LogFactory.getLog(StoreManager.class);
 
-    public SampleStore(File file) {
+    public StoreManager(File file) {
 
         this.file = file.getAbsolutePath();
     }
@@ -116,7 +119,7 @@ public class SampleStore {
         }
     }
 
-    private final Map<String, SampleUser> members = new HashMap<>();
+    private final Map<String, UserEntity> members = new HashMap<>();
 
     /**
      * Get the user with a given name
@@ -125,16 +128,16 @@ public class SampleStore {
      * @param org
      * @return user
      */
-    public SampleUser getMember(String name, String org) {
+    public UserEntity getMember(String name, String org) {
 
         // Try to get the SampleUser state from the cache
-        SampleUser sampleUser = members.get(SampleUser.toKeyValStoreName(name, org));
+    	UserEntity sampleUser = members.get(UserEntity.toKeyValStoreName(name, org));
         if (null != sampleUser) {
             return sampleUser;
         }
 
         // Create the SampleUser and try to restore it's state from the key value store (if found).
-        sampleUser = new SampleUser(name, org, this);
+        sampleUser = new UserEntity(name, org, this);
 
         return sampleUser;
 
@@ -151,10 +154,10 @@ public class SampleStore {
 
         // Try to get the SampleUser state from the cache
 
-        if (members.containsKey(SampleUser.toKeyValStoreName(name, org))) {
+        if (members.containsKey(UserEntity.toKeyValStoreName(name, org))) {
             return true;
         }
-        return SampleUser.isStored(name, org, this);
+        return UserEntity.isStored(name, org, this);
 
     }
 
@@ -172,18 +175,18 @@ public class SampleStore {
      * @throws NoSuchProviderException
      * @throws InvalidKeySpecException
      */
-    public SampleUser getMember(String name, String org, String mspId, File privateKeyFile,
+    public UserEntity getMember(String name, String org, String mspId, File privateKeyFile,
                                 File certificateFile) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException {
 
         try {
             // Try to get the SampleUser state from the cache
-            SampleUser sampleUser = members.get(SampleUser.toKeyValStoreName(name, org));
+        	UserEntity sampleUser = members.get(UserEntity.toKeyValStoreName(name, org));
             if (null != sampleUser) {
                 return sampleUser;
             }
 
             // Create the SampleUser and try to restore it's state from the key value store (if found).
-            sampleUser = new SampleUser(name, org, this);
+            sampleUser = new UserEntity(name, org, this);
             sampleUser.setMspId(mspId);
 
             String certificate = new String(IOUtils.toByteArray(new FileInputStream(certificateFile)), "UTF-8");
@@ -276,25 +279,25 @@ public class SampleStore {
         return ret;
     }
 
-    public void storeClientPEMTLSKey(SampleOrg sampleOrg, String key) {
+    public void storeClientPEMTLSKey(OrgEntity sampleOrg, String key) {
 
         setValue("clientPEMTLSKey." + sampleOrg.getName(), key);
 
     }
 
-    public String getClientPEMTLSKey(SampleOrg sampleOrg) {
+    public String getClientPEMTLSKey(OrgEntity sampleOrg) {
 
         return getValue("clientPEMTLSKey." + sampleOrg.getName());
 
     }
 
-    public void storeClientPEMTLCertificate(SampleOrg sampleOrg, String certificate) {
+    public void storeClientPEMTLCertificate(OrgEntity sampleOrg, String certificate) {
 
         setValue("clientPEMTLSCertificate." + sampleOrg.getName(), certificate);
 
     }
 
-    public String getClientPEMTLSCertificate(SampleOrg sampleOrg) {
+    public String getClientPEMTLSCertificate(OrgEntity sampleOrg) {
 
         return getValue("clientPEMTLSCertificate." + sampleOrg.getName());
 

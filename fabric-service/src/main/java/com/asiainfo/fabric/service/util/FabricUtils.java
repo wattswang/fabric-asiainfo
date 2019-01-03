@@ -54,9 +54,9 @@ import static org.junit.Assert.assertTrue;
 //import org.hyperledger.fabric.sdk.MockUser;
 //import org.hyperledger.fabric.sdk.ClientTest.MockEnrollment;
 
-public class TestUtils {
+public class FabricUtils {
 
-    private TestUtils() {
+    private FabricUtils() {
     }
 
     /**

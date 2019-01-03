@@ -1,4 +1,4 @@
-package com.asiainfo.fabric.service;
+package com.asiainfo.fabric.service.bean;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -7,8 +7,10 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 
+import org.hyperledger.fabric.sdk.HFClient;
 import org.hyperledger.fabric.sdk.User;
 import org.hyperledger.fabric_ca.sdk.HFCAClient;
+
 
 /*
  *  Copyright 2016, 2017 DTCC, Fujitsu Australia Software Technology, IBM - All Rights Reserved.
@@ -30,20 +32,22 @@ import org.hyperledger.fabric_ca.sdk.HFCAClient;
  * Keeps track which resources are defined for the Organization it represents.
  *
  */
-public class SampleOrg {
+public class OrgEntity {
     final String name;
     final String mspid;
     HFCAClient caClient;
+    
+    HFClient hfClient;
 
     Map<String, User> userMap = new HashMap<>();
     Map<String, String> peerLocations = new HashMap<>();
     Map<String, String> ordererLocations = new HashMap<>();
     Map<String, String> eventHubLocations = new HashMap<>();
-    private SampleUser admin;
+    private UserEntity admin;
     private String caLocation;
     private Properties caProperties = null;
 
-    private SampleUser peerAdmin;
+    private UserEntity peerAdmin;
 
 
     private String domainName;
@@ -54,16 +58,16 @@ public class SampleOrg {
 
     private String caName;
 
-    public SampleOrg(String name, String mspid) {
+    public OrgEntity(String name, String mspid) {
         this.name = name;
         this.mspid = mspid;
     }
 
-    public SampleUser getAdmin() {
+    public UserEntity getAdmin() {
         return admin;
     }
 
-    public void setAdmin(SampleUser admin) {
+    public void setAdmin(UserEntity admin) {
         this.admin = admin;
     }
 
@@ -139,7 +143,7 @@ public class SampleOrg {
         return name;
     }
 
-    public void addUser(SampleUser user) {
+    public void addUser(UserEntity user) {
         userMap.put(user.getName(), user);
     }
 
@@ -165,11 +169,11 @@ public class SampleOrg {
     }
 
 
-    public SampleUser getPeerAdmin() {
+    public UserEntity getPeerAdmin() {
         return peerAdmin;
     }
 
-    public void setPeerAdmin(SampleUser peerAdmin) {
+    public void setPeerAdmin(UserEntity peerAdmin) {
         this.peerAdmin = peerAdmin;
     }
 

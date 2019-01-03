@@ -64,7 +64,8 @@ import org.hyperledger.fabric_ca.sdk.RegistrationRequest;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.asiainfo.fabric.service.util.TestConfig;
+import com.asiainfo.fabric.service.bean.OrgEntity;
+import com.asiainfo.fabric.service.bean.UserEntity;
 
 import static java.lang.String.format;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -72,8 +73,8 @@ import static org.hyperledger.fabric.sdk.BlockInfo.EnvelopeType.TRANSACTION_ENVE
 import static org.hyperledger.fabric.sdk.Channel.NOfEvents.createNofEvents;
 import static org.hyperledger.fabric.sdk.Channel.PeerOptions.createPeerOptions;
 import static org.hyperledger.fabric.sdk.Channel.TransactionOptions.createTransactionOptions;
-import static com.asiainfo.fabric.service.util.TestUtils.resetConfig;
-import static com.asiainfo.fabric.service.util.TestUtils.testRemovingAddingPeersOrderers;
+import static com.asiainfo.fabric.service.util.FabricUtils.resetConfig;
+import static com.asiainfo.fabric.service.util.FabricUtils.testRemovingAddingPeersOrderers;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -86,7 +87,7 @@ import static org.junit.Assert.fail;
  */
 public class End2endITest {
 
-    private static final TestConfig testConfig = TestConfig.getConfig();
+    private static final FabricConfig testConfig = FabricConfig.getConfig();
     static final String TEST_ADMIN_NAME = "admin";
     private static final String TEST_FIXTURES_PATH = "src/test/fixture";
 
@@ -115,10 +116,10 @@ public class End2endITest {
         TX_EXPECTED.put("writeset1", "Missing writeset for channel bar block 1");
     }
 
-    private final TestConfigHelper configHelper = new TestConfigHelper();
+    private final FabricConfigHelper configHelper = new FabricConfigHelper();
     String testTxID = null;  // save the CC invoke TxID and use in queries
-    SampleStore sampleStore = null;
-    private Collection<SampleOrg> testSampleOrgs;
+    StoreManager sampleStore = null;
+    private Collection<OrgEntity> testSampleOrgs;
     static String testUser1 = "user1";
 
     static void out(String format, Object... args) {
@@ -157,8 +158,7 @@ public class End2endITest {
 
         testSampleOrgs = testConfig.getIntegrationTestsSampleOrgs();
         //Set up hfca for each sample org
-
-        for (SampleOrg sampleOrg : testSampleOrgs) {
+        for (OrgEntity sampleOrg : testSampleOrgs) {
             String caName = sampleOrg.getCAName(); //Try one of each name and no name.
             if (caName != null && !caName.isEmpty()) {
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(caName, sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
@@ -180,13 +180,13 @@ public class End2endITest {
         if (sampleStoreFile.exists()) { //For testing start fresh
             sampleStoreFile.delete();
         }
-        sampleStore = new SampleStore(sampleStoreFile);
+        sampleStore = new StoreManager(sampleStoreFile);
         enrollUsersSetup(sampleStore); //This enrolls users with fabric ca and setups sample store to get users later.
         runFabricTest(sampleStore); //Runs Fabric tests with constructing channels, joining peers, exercising chaincode
 
     }
 
-    public void runFabricTest(final SampleStore sampleStore) throws Exception {
+    public void runFabricTest(final StoreManager sampleStore) throws Exception {
 
         ////////////////////////////
         // Setup client
@@ -198,7 +198,7 @@ public class End2endITest {
 
         ////////////////////////////
         //Construct and run the channels
-        SampleOrg sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg1");
+        OrgEntity sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg1");
         Channel fooChannel = constructChannel(FOO_CHANNEL_NAME, client, sampleOrg);
         sampleStore.saveChannel(fooChannel);
         runChannel(client, fooChannel, true, sampleOrg, 0);
@@ -236,7 +236,7 @@ public class End2endITest {
      * @param sampleStore
      * @throws Exception
      */
-    public void enrollUsersSetup(SampleStore sampleStore) throws Exception {
+    public void enrollUsersSetup(StoreManager sampleStore) throws Exception {
         ////////////////////////////
         //Set up USERS
 
@@ -246,7 +246,7 @@ public class End2endITest {
         // get users for all orgs
 
         out("***** Enrolling Users *****");
-        for (SampleOrg sampleOrg : testSampleOrgs) {
+        for (OrgEntity sampleOrg : testSampleOrgs) {
 
             HFCAClient ca = sampleOrg.getCAClient();
 
@@ -281,13 +281,13 @@ public class End2endITest {
                 assertEquals(ca.getCAName(), infoName);
             }
 
-            SampleUser admin = sampleStore.getMember(TEST_ADMIN_NAME, orgName);
+            UserEntity admin = sampleStore.getMember(TEST_ADMIN_NAME, orgName);
             if (!admin.isEnrolled()) {  //Preregistered admin only needs to be enrolled with Fabric caClient.
                 admin.setEnrollment(ca.enroll(admin.getName(), "adminpw"));
                 admin.setMspId(mspid);
             }
 
-            SampleUser user = sampleStore.getMember(testUser1, sampleOrg.getName());
+            UserEntity user = sampleStore.getMember(testUser1, sampleOrg.getName());
             if (!user.isRegistered()) {  // users need to be registered AND enrolled
                 RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
                 user.setEnrollmentSecret(ca.register(rr, admin));
@@ -300,7 +300,7 @@ public class End2endITest {
             final String sampleOrgName = sampleOrg.getName();
             final String sampleOrgDomainName = sampleOrg.getDomainName();
 
-            SampleUser peerOrgAdmin = sampleStore.getMember(sampleOrgName + "Admin", sampleOrgName, sampleOrg.getMSPID(),
+            UserEntity peerOrgAdmin = sampleStore.getMember(sampleOrgName + "Admin", sampleOrgName, sampleOrg.getMSPID(),
                     Util.findFileSk(Paths.get(testConfig.getTestChannelPath(), "crypto-config/peerOrganizations/",
                             sampleOrgDomainName, format("/users/Admin@%s/msp/keystore", sampleOrgDomainName)).toFile()),
                     Paths.get(testConfig.getTestChannelPath(), "crypto-config/peerOrganizations/", sampleOrgDomainName,
@@ -326,7 +326,7 @@ public class End2endITest {
     Map<String, Long> expectedMoveRCMap = new HashMap<>(); // map from channel name to move chaincode's return code.
 
     //CHECKSTYLE.OFF: Method length is 320 lines (max allowed is 150).
-    void runChannel(HFClient client, Channel channel, boolean installChaincode, SampleOrg sampleOrg, int delta) {
+    void runChannel(HFClient client, Channel channel, boolean installChaincode, OrgEntity sampleOrg, int delta) {
 
         class ChaincodeEventCapture { //A test class to capture chaincode events
             final String handle;
@@ -804,7 +804,7 @@ public class End2endITest {
         }
     }
 
-    Channel constructChannel(String name, HFClient client, SampleOrg sampleOrg) throws Exception {
+    Channel constructChannel(String name, HFClient client, OrgEntity sampleOrg) throws Exception {
         ////////////////////////////
         //Construct the channel
         //
@@ -815,7 +815,7 @@ public class End2endITest {
         boolean doPeerEventing = !testConfig.isRunningAgainstFabric10() && BAR_CHANNEL_NAME.equals(name);
 //        boolean doPeerEventing = !testConfig.isRunningAgainstFabric10() && FOO_CHANNEL_NAME.equals(name);
         //Only peer Admin org
-        SampleUser peerAdmin = sampleOrg.getPeerAdmin();
+        UserEntity peerAdmin = sampleOrg.getPeerAdmin();
         client.setUserContext(peerAdmin);
 
         Collection<Orderer> orderers = new LinkedList<>();
@@ -839,7 +839,7 @@ public class End2endITest {
         Orderer anOrderer = orderers.iterator().next();
         orderers.remove(anOrderer);
 
-        String path = TEST_FIXTURES_PATH + "/sdkintegration/e2e-2Orgs/" + TestConfig.FAB_CONFIG_GEN_VERS + "/" + name + ".tx";
+        String path = TEST_FIXTURES_PATH + "/sdkintegration/e2e-2Orgs/" + FabricConfig.FAB_CONFIG_GEN_VERS + "/" + name + ".tx";
         ChannelConfiguration channelConfiguration = new ChannelConfiguration(new File(path));
 
         //Create channel that has only one signer that is this orgs peer admin. If channel creation policy needed more signature they would need to be added too.

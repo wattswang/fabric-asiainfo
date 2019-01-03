@@ -21,7 +21,7 @@ import org.hyperledger.fabric.sdk.helper.Config;
  * Container for methods to set SDK environment before running unit+integration tests
  *
  */
-public class TestConfigHelper {
+public class FabricConfigHelper {
 
     public static final String CONFIG_OVERRIDES = "FABRICSDKOVERRIDES";
 
