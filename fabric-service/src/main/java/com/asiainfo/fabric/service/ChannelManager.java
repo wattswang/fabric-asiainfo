@@ -19,7 +19,6 @@ public class ChannelManager {
 	
 	public Channel createChannel(String name, HFClient client, OrgEntity sampleOrg) throws Exception {
 		logger.info(String.format("start create channel, channel name : %s", name));
-		
 		return null;
 	}
 	

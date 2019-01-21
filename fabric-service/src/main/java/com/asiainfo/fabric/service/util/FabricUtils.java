@@ -42,8 +42,6 @@ import org.hyperledger.fabric.sdk.User;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 import org.hyperledger.fabric.sdk.helper.Config;
 
-import static java.lang.String.format;
-
 //import org.hyperledger.fabric.sdk.MockUser;
 //import org.hyperledger.fabric.sdk.ClientTest.MockEnrollment;
 
@@ -138,13 +136,13 @@ public class FabricUtils {
         }
     }
 
-    private static Field getFieldInt(Class o, String name) throws NoSuchFieldException {
+    private static Field getFieldInt(Class<?> o, String name) throws NoSuchFieldException {
         Field ret;
         try {
             ret = o.getDeclaredField(name);
         } catch (NoSuchFieldException e) {
 
-            Class superclass = o.getSuperclass();
+            Class<?> superclass = o.getSuperclass();
             if (null != superclass) {
                 ret = getFieldInt(superclass, name);
 
@@ -217,18 +215,16 @@ public class FabricUtils {
         return new MockEnrollment(key, cert);
     }
 
-    public static ArrayList tarBytesToEntryArrayList(byte[] bytes) throws Exception {
+    public static ArrayList<String> tarBytesToEntryArrayList(byte[] bytes) throws Exception {
 
         ArrayList<String> ret = new ArrayList<>();
 
-        TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new GZIPInputStream(new ByteArrayInputStream(bytes)));
+        @SuppressWarnings("resource")
+		TarArchiveInputStream tarArchiveInputStream = new TarArchiveInputStream(new GZIPInputStream(new ByteArrayInputStream(bytes)));
 
         for (TarArchiveEntry ta = tarArchiveInputStream.getNextTarEntry(); null != ta; ta = tarArchiveInputStream.getNextTarEntry()) {
-
             ret.add(ta.getName());
-
         }
-
         return ret;
 
     }

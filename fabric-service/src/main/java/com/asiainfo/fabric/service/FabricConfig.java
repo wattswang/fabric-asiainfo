@@ -36,7 +36,7 @@ public class FabricConfig {
     private static final String ORG_HYPERLEDGER_FABRIC_SDK_CONFIGURATION = "org.hyperledger.fabric.sdktest.configuration";
     private static final String ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST = "ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST";
     private static final String LOCALHOST = //Change test to reference another host .. easier config for my testing on Windows !
-            System.getenv(ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST) == null ? "47.99.160.187" : System.getenv(ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST);
+            System.getenv(ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST) == null ? "10.21.66.189" : System.getenv(ORG_HYPERLEDGER_FABRIC_SDK_TEST_FABRIC_HOST);
 
     private static final String PROPBASE = "org.hyperledger.fabric.sdktest.";
 
@@ -110,18 +110,18 @@ public class FabricConfig {
             //////
             defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.mspid", "Org1MSP");
             defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.domname", "org1.example.com");
-            //defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.ca_location", "http://" + LOCALHOST + ":7054");
-            //defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.caName", "ca0");
-            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.peer_locations", "peer0.org1.example.com@grpc://" + LOCALHOST + ":7051, peer1.org1.example.com@grpc://" + LOCALHOST + ":7056");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.ca_location", "http://" + LOCALHOST + ":7054");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.caName", "ca0");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.peer_locations", "peer0.org1.example.com@grpc://" + LOCALHOST + ":7051");
             defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.orderer_locations", "orderer.example.com@grpc://" + LOCALHOST + ":7050");
-            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.eventhub_locations", "peer0.org1.example.com@grpc://" + LOCALHOST + ":7053,peer1.org1.example.com@grpc://" + LOCALHOST + ":7058");
-            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.mspid", "Org2MSP");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg1.eventhub_locations", "peer0.org1.example.com@grpc://" + LOCALHOST + ":7053");
+/*            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.mspid", "Org2MSP");
             defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.domname", "org2.example.com");
-            //defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.ca_location", "http://" + LOCALHOST + ":8054");
-            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.peer_locations", "peer0.org2.example.com@grpc://" + LOCALHOST + ":8051,peer1.org2.example.com@grpc://" + LOCALHOST + ":8056");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.ca_location", "http://" + LOCALHOST + ":8054");
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.peer_locations", "peer0.org2.example.com@grpc://" + LOCALHOST + ":8051,peer1.org2.example.com@grpc://" + LOCALHOST + ":7051");
             defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.orderer_locations", "orderer.example.com@grpc://" + LOCALHOST + ":7050");
-            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.eventhub_locations", "peer0.org2.example.com@grpc://" + LOCALHOST + ":8053, peer1.org2.example.com@grpc://" + LOCALHOST + ":8058");
-
+            defaultProperty(INTEGRATIONTESTS_ORG + "peerOrg2.eventhub_locations", "peer0.org2.example.com@grpc://" + LOCALHOST + ":8053, peer1.org2.example.com@grpc://" + LOCALHOST + ":7051");
+*/
             defaultProperty(INTEGRATIONTESTSTLS, null);
             runningTLS = null != sdkProperties.getProperty(INTEGRATIONTESTSTLS, null);
             runningFabricCATLS = runningTLS;
@@ -246,13 +246,13 @@ public class FabricConfig {
 
     }
 
-    private String httpTLSify(String location) {
+/*    private String httpTLSify(String location) {
         location = location.trim();
 
         return runningFabricCATLS ?
                 location.replaceFirst("^http://", "https://") : location;
     }
-
+*/
     /**
      * getConfig return back singleton for SDK configuration.
      *
@@ -314,11 +314,11 @@ public class FabricConfig {
         return Integer.parseInt(getProperty(PROPOSALWAITTIME));
     }
 
-    public Collection<OrgEntity> getIntegrationTestsSampleOrgs() {
+    public Collection<OrgEntity> getOrgEntitys() {
         return Collections.unmodifiableCollection(sampleOrgs.values());
     }
 
-    public OrgEntity getIntegrationTestsSampleOrg(String name) {
+    public OrgEntity getOrgEntity(String name) {
         return sampleOrgs.get(name);
 
     }
@@ -375,8 +375,8 @@ public class FabricConfig {
         ret.setProperty("pemFile", cert.getAbsolutePath());
 
         ret.setProperty("hostnameOverride", name);
-        ret.setProperty("sslProvider", "openSSL");
-        ret.setProperty("negotiationType", "TLS");
+        //ret.setProperty("sslProvider", "openSSL");
+        //ret.setProperty("negotiationType", "TLS");
 
         return ret;
     }
@@ -389,9 +389,10 @@ public class FabricConfig {
 
     public String getTestChannelPath() {
 
-        return "src/test/fixture/sdkintegration/e2e-2Orgs/" + FAB_CONFIG_GEN_VERS;
+        return "D:/watts";
 
     }
+    
 
     public boolean isRunningAgainstFabric10() {
 

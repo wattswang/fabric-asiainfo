@@ -7,6 +7,8 @@
 
 package com.asiainfo.fabric.service.bean;
 
+import org.hyperledger.fabric.sdk.ChaincodeID;
+
 public class ChainCodeEntity{
 	
 	private String chainCodePath;  //链码路径
@@ -16,10 +18,14 @@ public class ChainCodeEntity{
 	private String chainCodeVersion;	//链码版本
 	
 	private String chainCodeLang;	//链码语言
-
-	public String getChainCodePath() {
 	
+	public String getChainCodePath() {
 		return chainCodePath;
+	}
+
+	public ChaincodeID getChaincodeId() {
+		return ChaincodeID.newBuilder().setName(chainName)
+				.setVersion(chainCodeVersion).setPath(chainCodePath).build();
 	}
 
 	public void setChainCodePath(String chainCodePath) {
@@ -56,7 +62,6 @@ public class ChainCodeEntity{
 	
 		this.chainCodeLang = chainCodeLang;
 	}
-	
 	
 	
 }

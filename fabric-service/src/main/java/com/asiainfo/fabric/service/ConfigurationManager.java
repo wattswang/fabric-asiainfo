@@ -38,6 +38,7 @@ import org.hyperledger.fabric_ca.sdk.RegistrationRequest;
 import com.asiainfo.fabric.service.bean.OrgEntity;
 import com.asiainfo.fabric.service.bean.UserEntity;
 
+@SuppressWarnings("deprecation")
 public class ConfigurationManager {
 	
 	private static final Log logger = LogFactory.getLog(ConfigurationManager.class);
@@ -58,7 +59,7 @@ public class ConfigurationManager {
     	FabricUtils.resetConfig();
         configHelper.customizeConfig();
 
-        orgs = fabricConfig.getIntegrationTestsSampleOrgs();
+        orgs = fabricConfig.getOrgEntitys();
         //Set up hfca for each sample org
         for (OrgEntity sampleOrg : orgs) {
             String caName = sampleOrg.getCAName(); //Try one of each name and no name.

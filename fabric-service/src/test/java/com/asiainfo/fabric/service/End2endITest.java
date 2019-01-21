@@ -156,16 +156,16 @@ public class End2endITest {
         resetConfig();
         configHelper.customizeConfig();
 
-        testSampleOrgs = testConfig.getIntegrationTestsSampleOrgs();
+        testSampleOrgs = testConfig.getOrgEntitys();
         //Set up hfca for each sample org
-        for (OrgEntity sampleOrg : testSampleOrgs) {
+/*        for (OrgEntity sampleOrg : testSampleOrgs) {
             String caName = sampleOrg.getCAName(); //Try one of each name and no name.
             if (caName != null && !caName.isEmpty()) {
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(caName, sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
             } else {
                 sampleOrg.setCAClient(HFCAClient.createNewInstance(sampleOrg.getCALocation(), sampleOrg.getCAProperties()));
             }
-        }
+        }*/
     }
 
     Map<String, Properties> clientTLSProperties = new HashMap<>();
@@ -198,7 +198,7 @@ public class End2endITest {
 
         ////////////////////////////
         //Construct and run the channels
-        OrgEntity sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg1");
+        OrgEntity sampleOrg = testConfig.getOrgEntity("peerOrg1");
         Channel fooChannel = constructChannel(FOO_CHANNEL_NAME, client, sampleOrg);
         sampleStore.saveChannel(fooChannel);
         runChannel(client, fooChannel, true, sampleOrg, 0);
@@ -210,7 +210,7 @@ public class End2endITest {
         assertNull(client.getChannel(FOO_CHANNEL_NAME));
         out("\n");
 
-        sampleOrg = testConfig.getIntegrationTestsSampleOrg("peerOrg2");
+        sampleOrg = testConfig.getOrgEntity("peerOrg2");
         Channel barChannel = constructChannel(BAR_CHANNEL_NAME, client, sampleOrg);
         assertTrue(barChannel.isInitialized());
         /**
@@ -248,13 +248,13 @@ public class End2endITest {
         out("***** Enrolling Users *****");
         for (OrgEntity sampleOrg : testSampleOrgs) {
 
-            HFCAClient ca = sampleOrg.getCAClient();
+            //HFCAClient ca = sampleOrg.getCAClient();
 
             final String orgName = sampleOrg.getName();
             final String mspid = sampleOrg.getMSPID();
-            ca.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
+            //ca.setCryptoSuite(CryptoSuite.Factory.getCryptoSuite());
 
-            if (testConfig.isRunningFabricTLS()) {
+/*            if (testConfig.isRunningFabricTLS()) {
                 //This shows how to get a client TLS certificate from Fabric CA
                 // we will use one client TLS certificate for orderer peers etc.
                 final EnrollmentRequest enrollmentRequestTLS = new EnrollmentRequest();
@@ -272,28 +272,28 @@ public class End2endITest {
                 //Save in samplestore for follow on tests.
                 sampleStore.storeClientPEMTLCertificate(sampleOrg, tlsCertPEM);
                 sampleStore.storeClientPEMTLSKey(sampleOrg, tlsKeyPEM);
-            }
+            }*/
 
-            HFCAInfo info = ca.info(); //just check if we connect at all.
+/*            HFCAInfo info = ca.info(); //just check if we connect at all.
             assertNotNull(info);
             String infoName = info.getCAName();
             if (infoName != null && !infoName.isEmpty()) {
                 assertEquals(ca.getCAName(), infoName);
-            }
+            }*/
 
             UserEntity admin = sampleStore.getMember(TEST_ADMIN_NAME, orgName);
             if (!admin.isEnrolled()) {  //Preregistered admin only needs to be enrolled with Fabric caClient.
-                admin.setEnrollment(ca.enroll(admin.getName(), "adminpw"));
+                //admin.setEnrollment(ca.enroll(admin.getName(), "adminpw"));
                 admin.setMspId(mspid);
             }
 
             UserEntity user = sampleStore.getMember(testUser1, sampleOrg.getName());
-            if (!user.isRegistered()) {  // users need to be registered AND enrolled
+/*            if (!user.isRegistered()) {  // users need to be registered AND enrolled
                 RegistrationRequest rr = new RegistrationRequest(user.getName(), "org1.department1");
                 user.setEnrollmentSecret(ca.register(rr, admin));
-            }
+            }*/
             if (!user.isEnrolled()) {
-                user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
+                //user.setEnrollment(ca.enroll(user.getName(), user.getEnrollmentSecret()));
                 user.setMspId(mspid);
             }
 
@@ -808,7 +808,7 @@ public class End2endITest {
         ////////////////////////////
         //Construct the channel
         //
-
+    	name = "mychannel";
         out("Constructing channel %s", name);
 
         //boolean doPeerEventing = false;
@@ -839,13 +839,14 @@ public class End2endITest {
         Orderer anOrderer = orderers.iterator().next();
         orderers.remove(anOrderer);
 
-        String path = TEST_FIXTURES_PATH + "/sdkintegration/e2e-2Orgs/" + FabricConfig.FAB_CONFIG_GEN_VERS + "/" + name + ".tx";
-        ChannelConfiguration channelConfiguration = new ChannelConfiguration(new File(path));
+        String path = "D:/watts/channel-artifacts/channel.tx";
+	    ChannelConfiguration channelConfiguration = new ChannelConfiguration(new File(path));
 
         //Create channel that has only one signer that is this orgs peer admin. If channel creation policy needed more signature they would need to be added too.
-        Channel newChannel = client.newChannel(name, anOrderer, channelConfiguration, client.getChannelConfigurationSignature(channelConfiguration, peerAdmin));
-
-        out("Created channel %s", name);
+	    //Channel newChannel = client.newChannel(name, anOrderer, channelConfiguration, client.getChannelConfigurationSignature(channelConfiguration, peerAdmin));
+	    Channel newChannel = client.newChannel("mychannel");
+	    newChannel.addOrderer(anOrderer);
+	    out("Created channel %s", name);
 
         boolean everyother = true; //test with both cases when doing peer eventing.
         for (String peerName : sampleOrg.getPeerNames()) {
@@ -860,7 +861,8 @@ public class End2endITest {
             peerProperties.put("grpc.NettyChannelBuilderOption.maxInboundMessageSize", 9000000);
 
             Peer peer = client.newPeer(peerName, peerLocation, peerProperties);
-            if (testConfig.isFabricVersionAtOrAfter("1.3")) {
+            newChannel.addPeer(peer);
+            /*if (testConfig.isFabricVersionAtOrAfter("1.3")) {
                 newChannel.joinPeer(peer, createPeerOptions().setPeerRoles(EnumSet.of(PeerRole.ENDORSING_PEER, PeerRole.LEDGER_QUERY, PeerRole.CHAINCODE_QUERY, PeerRole.EVENT_SOURCE))); //Default is all roles.
 
             } else {
@@ -871,7 +873,7 @@ public class End2endITest {
                     newChannel.joinPeer(peer, createPeerOptions().setPeerRoles(EnumSet.of(PeerRole.ENDORSING_PEER, PeerRole.LEDGER_QUERY, PeerRole.CHAINCODE_QUERY)));
                 }
             }
-            out("Peer %s joined channel %s", peerName, name);
+            out("Peer %s joined channel %s", peerName, name);*/
             everyother = !everyother;
         }
         //just for testing ...
@@ -896,7 +898,7 @@ public class End2endITest {
                     eventHubProperties);
             newChannel.addEventHub(eventHub);
         }
-
+        
         newChannel.initialize();
 
         out("Finished initialization channel %s", name);
