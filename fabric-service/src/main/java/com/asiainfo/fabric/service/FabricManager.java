@@ -30,6 +30,7 @@ import org.hyperledger.fabric.sdk.Orderer;
 import org.hyperledger.fabric.sdk.Peer;
 import org.hyperledger.fabric.sdk.exception.InvalidArgumentException;
 import org.hyperledger.fabric.sdk.exception.ProposalException;
+import org.hyperledger.fabric.sdk.exception.TransactionException;
 import org.hyperledger.fabric.sdk.security.CryptoSuite;
 
 import com.asiainfo.fabric.service.bean.OrgEntity;
@@ -63,7 +64,7 @@ public class FabricManager {
 	/**
 	 * channles
 	 */
-	private static final Map<String,Channel> channels = new HashMap<String,Channel>();
+	private static Map<String,Channel> channels = new HashMap<String,Channel>();
 
 	File sampleStoreFile = new File(System.getProperty("java.io.tmpdir") + "/HFCSampletest.properties");
 
@@ -113,12 +114,35 @@ public class FabricManager {
 	Channel getChannel(String channelName, OrgEntity orgEntity) throws InvalidArgumentException, ProposalException {
 		Channel channel = channels.get(channelName);
 		if(null != channel){
-			return channel;
+			return initialChannel(channel);
 		}
-		return createChannel(channelName,orgEntity);
+		createChannel(channelName,orgEntity);
+		channel = channels.get(channelName);
+		return initialChannel(channel);
 	}
 
-	Channel createChannel(String channelName, OrgEntity orgEntity) throws InvalidArgumentException, ProposalException {
+	/** 
+	 * initialChannel:(这里用一句话描述这个方法的作用). <br/> 
+	 * 
+	 * @author wangchao9
+	 * @param channel 
+	 * @since JDK 1.8 
+	*/
+	private Channel initialChannel(Channel channel) {
+		if(channel.isInitialized()){
+			return channel;
+		}
+		try {
+			return channel.initialize();
+		} catch (InvalidArgumentException e) {
+			e.printStackTrace();
+		} catch (TransactionException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	void createChannel(String channelName, OrgEntity orgEntity) throws InvalidArgumentException, ProposalException {
 		Collection<Orderer> orderers = new LinkedList<>();
 		Set<String> ordererNames = orgEntity.getOrdererNames();
 		for (String orderName : ordererNames) {
@@ -167,11 +191,10 @@ public class FabricManager {
 			newChannel.addEventHub(eventHub);
 		}
 		try {
-			return newChannel.initialize();
+			channels.put(channelName, newChannel);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return null;
 	}
 
 	public void enrollUsersSetup(StoreManager storeManager)
